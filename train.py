@@ -15,6 +15,8 @@ from model import UNet3D
 from utils import (get_weight_vector, Report,
                    transfer_weights)
 
+from tqdm import tqdm
+
 argv = sys.argv[1:]
 parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -87,7 +89,7 @@ train_loader = DataLoader(MRIDataset(train_dir,
                                      sampling_mode='random',
                                      deterministic=True),
                           shuffle=True,
-                          batch_size=1,
+                          batch_size=2,
                           pin_memory=True)
 
 val_dir = join(args.data_dir, 'val')
@@ -176,7 +178,7 @@ def validate(val_loader, epoch):
 if __name__ == "__main__":
     best_performance = float('Inf')
     n_epochs = args.epochs
-    for epoch in range(n_epochs):
+    for epoch in tqdm(range(n_epochs)):
         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
         train_loss, train_acc = train(train_loader, epoch)
         valid_loss, valid_acc = validate(val_loader, epoch)

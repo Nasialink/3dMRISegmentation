@@ -43,9 +43,11 @@ def generate_ex_list(directory):
         label_list = list()
         for file in files:
             if not file.startswith('.') and file.endswith('.nii.gz'):
-                if ("Lesion" in file):
+                #if ("Lesion" in file):
+                if ("lesion" in file):
                     label_list.append(join(dirpath, file))
-                elif ("mask" not in file):
+                #elif ("mask" not in file):
+                elif ("T1w" in file):
                     inputs.append(join(dirpath, file))
         if label_list:
             labels.append(label_list)
@@ -58,12 +60,12 @@ def gen_mask(lesion_files):
     Given a list of lesion files, generate a mask
     that incorporates data from all of them
     """
-    first_lesion = nib.load(lesion_files[0]).get_data()
+    first_lesion = nib.load(lesion_files[0]).get_fdata()
     if len(lesion_files) == 1:
         return first_lesion
     lesion_data = numpy.zeros((first_lesion.shape[0], first_lesion.shape[1], first_lesion.shape[2]))
     for file in lesion_files:
-        l_file = correct_dims(nib.load(file).get_data())
+        l_file = correct_dims(nib.load(file).get_fdata())
         lesion_data = numpy.maximum(l_file, lesion_data)
     return lesion_data
 

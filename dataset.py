@@ -26,7 +26,7 @@ class MRIDataset(Dataset):
 
     def __getitem__(self, idx):
         self.current_item_path = self.inputs[idx]
-        input_img = correct_dims(nib.load(self.inputs[idx]).get_data())
+        input_img = correct_dims(nib.load(self.inputs[idx]).get_fdata())
         label_img = gen_mask(self.labels[idx])
 
         # Resize to input image and label to size (self.size x self.size x self.size)
