@@ -1,9 +1,35 @@
-python train.py --data_dir /media/ssd2tb/nasia/naofumi --save_dir /media/ssd2tb/nasia/naofumi/models --volume_size 64
-python train.py --data_dir /media/ssd2tb/nasia/naofumi --save_dir /media/ssd2tb/nasia/naofumi/models_zoom_out_100_size --volume_size 120 120 70 --resume_model /media/ssd2tb/nasia/naofumi/net-epoch-127_zoomin.pth --epochs 150
+How to run scripts
 
-python train.py --data_dir /home/superteam/3dMRISegmentation/data --save_dir /home/superteam/3dMRISegmentation/models --volume_size 128 128 71 --epochs 150
-python train.py --data_dir /home/superteam/3dMRISegmentation/data --save_dir /home/superteam/3dMRISegmentation/models_zoomout --volume_size 144 172 71 --resume_model /home/superteam/3dMRISegmentation/models_zoomin/net-epoch-140.pth --epochs 150
 
-conda env export > unet3d_new.yml
-python test.py --data_dir /media/ssd2tb/nasia/naofumi --model_path /media/ssd2tb/nasia/naofumi/models_zoom_out86_84_72/net-epoch-139.pth --dump_name zoom_out_100_size_test
-find /home/nasia/Documents -type f -iname inference
+Train zoom in:
+
+Change "resume_model" var to False
+Set the config parameters
+Run "python3 train.py"
+"exp_zoom_in" folder should appear
+
+
+Train zoom out:
+
+Change "resume_model" var to True
+Set the config parameters
+Run "python3 train.py"
+"exp_zoom_out" folder should appear
+
+
+Plot metrics:
+
+Run "python3 plt_results.py"
+The plots should appear under "exp_zoom_in/figures" and "exp_zoom_out/figures"
+
+
+Run inference for zoom_in:
+
+Change "resume_model" var to False
+The inference images should appear under "exp_zoom_in/inf"
+
+
+Run inference for zoom_out:
+
+Change "resume_model" var to True
+The inference images should appear under "exp_zoom_out/inf"

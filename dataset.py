@@ -5,6 +5,7 @@ import nibabel as nib
 from utils import (generate_ex_list, gen_mask, correct_dims, resize_img,
                    center_crop, find_and_crop_lesions, random_crop)
 from random import random
+from tqdm import tqdm
 
 
 class MRIDataset(Dataset):
@@ -86,3 +87,81 @@ class MRIDataset(Dataset):
         x, y, z = coords
         preds_full[x:x+self.size[0], y:y+self.size[1], z:z+self.size[2]] = preds
         return torch.Tensor(preds_full)
+
+
+    def create_dataset(self):
+        self.x = np.zeros((len(self.inputs), self.size[0], self.size[1], self.size[2]))
+        self.y = np.zeros((len(self.inputs), self.size[0], self.size[1], self.size[2]))
+        indx = 0
+        for idx in tqdm(range(len(self.inputs))):
+            try:
+                self.current_item_path = self.inputs[idx]
+                print(self.current_item_path)
+                input_img = correct_dims(nib.load(self.inputs[idx]).get_fdata())
+                label_img = gen_mask(self.labels[idx])
+
+                # Resize to input image and label to size (self.size x self.size x self.size)
+                if self.sampling_mode == "resize":
+                    ex, label = resize_img(input_img, label_img, self.size)
+
+                # Constant center-crop sample of size (self.size x self.size x self.size)
+                elif self.sampling_mode == 'center':
+                    ex, label = center_crop(input_img, label_img, self.size)
+
+                # Find centers of lesion masks and crop image to include them
+                # to measure consistent validation performance with small crops
+                elif self.sampling_mode == "center_val":
+                    ex, label = find_and_crop_lesions(input_img, label_img, self.size,
+                                                    self.deterministic)
+
+                # Randomly crop sample of size (self.size x self.size x self.size)
+                elif self.sampling_mode == "random":
+                    ex, label = random_crop(input_img, label_img, self.size)
+
+                else:
+                    print("Invalid sampling mode.")
+                    exit()
+
+                ex = np.divide(ex, 255.0)
+                label = np.array([(label > 0).astype(int)]).squeeze()
+                # (experimental) APPLY RANDOM FLIPPING ALONG EACH AXIS
+                if not self.deterministic:
+                    for i in range(3):
+                        if random() > 0.5:
+                            ex = np.flip(ex, i)
+                            label = np.flip(label, i)
+                # inputs = torch.from_numpy(ex.copy()).type(
+                #     torch.FloatTensor).unsqueeze(0)
+                # labels = torch.from_numpy(label.copy()).type(
+                #     torch.FloatTensor).unsqueeze(0)
+                # return inputs, labels
+                self.x[indx, :, :, :] = ex
+                self.y[indx, :, :, :] = label
+                indx += 1
+            except:
+                print("error")
+
+        self.x = self.x[:indx, :, :, :]
+        self.y = self.y[:indx, :, :, :]
+
+
+
+
+class MRIDataset_(Dataset):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __len__(self):
+        return len(self.x)
+
+    def __getitem__(self, idx):
+
+        ex = self.x[idx, :, :, :]
+        label = self.y[idx, :, :, :]
+        inputs = torch.from_numpy(ex.copy()).type(
+            torch.FloatTensor).unsqueeze(0)
+        labels = torch.from_numpy(label.copy()).type(
+            torch.FloatTensor).unsqueeze(0)
+        
+        return inputs, labels
