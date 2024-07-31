@@ -1,6 +1,12 @@
 How to run scripts
 
 
+Create sets:
+
+Change "data_dir" var to point to the correct path
+Run "python3 create_sets.py"
+"sets" folder should appear
+
 Train zoom in:
 
 Change "resume_model" var to False

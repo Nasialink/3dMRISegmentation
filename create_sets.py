@@ -13,7 +13,7 @@ try:
 except OSError as error:
     print(error)
 
-data_dir = "/home/superteam/3dMRISegmentation/data/few/"
+data_dir = "/home/superteam/3dMRISegmentation/data/"
 size = [128, 128, 71]
 assert len(size) == 3
 
