@@ -18,7 +18,7 @@ size = [128, 128, 71]
 assert len(size) == 3
 
 train_dir = join(data_dir, 'train')
-train_dat = MRIDataset(train_dir, size, sampling_mode='center_val', deterministic=True)
+train_dat = MRIDataset(train_dir, size, sampling_mode='random', deterministic=True)
 
 val_dir = join(data_dir, 'val')
 val_dat = MRIDataset(val_dir, size, sampling_mode='center_val', deterministic=True)
