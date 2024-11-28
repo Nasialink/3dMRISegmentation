@@ -34,7 +34,7 @@ if not resume_model:
         "exp_metrics": exp_metrics,
         "exp_figures": exp_figures,
         "exp_model_weights": exp,
-        "batch_size": 2,
+        "batch_size": 4,
         "epochs": 1200,
         "learning_rate": 1e-3,
         "weight_decay": 1e-4,
@@ -50,7 +50,7 @@ else:
         "exp_metrics": exp_metrics,
         "exp_figures": exp_figures,
         "exp_model_weights": exp,
-        "batch_size": 2,
+        "batch_size": 4,
         "epochs": 150,
         "learning_rate": 1e-3,
         "weight_decay": 1e-4,
@@ -158,7 +158,10 @@ def train(train_loader, epoch):
         if is_cuda:
             inputs = inputs.cuda()
             labels = labels.cuda()
+        print("xaxaxaxaxa: ", inputs.size())
+        print("xexexexexe: ", labels.size())
         outputs = sigmoid(net(inputs))
+        print("xixixixixi: ", outputs.size())
         reporter.feed(outputs, labels)
         bce_crit.weight = get_weight_vector(labels, relative_weight, is_cuda)
         loss = criterion(outputs, labels)
