@@ -13,13 +13,14 @@ import torch.optim as optim
 from dataset import MRIDataset_
 from loss import DiceLoss
 from model import UNet3D
+from brats_model import BrainTumorSegmentationModel
 from utils import (get_weight_vector, Report,
                    transfer_weights)
 
 from tqdm import tqdm
 import numpy as np
 
-resume_model = True
+resume_model = False
 
 exp = "./exp_zoom_out" if resume_model else "./exp_zoom_in"
 exp_inf = exp + "/inf"
@@ -40,7 +41,8 @@ if not resume_model:
         "weight_decay": 1e-4,
         "weight": 1,
         "restart": 50,
-        "num_of_patients": 150
+        "num_of_patients": 150,
+        "tf_enable": True
     }
 else: 
     config = {
@@ -56,7 +58,8 @@ else:
         "weight_decay": 1e-4,
         "weight": 1,
         "restart": 50,
-        "num_of_patients": 150
+        "num_of_patients": 150,
+        "tf_enable": True
     }
 
 try:  
@@ -71,6 +74,12 @@ except OSError as error:
 is_cuda = torch.cuda.is_available()
 
 model_weights_path = './exp_zoom_in/best_model.pth'
+
+if config["tf_enable"]:
+    brats_input_shape = (4, 160, 160, 90)
+    brats_output_channels = 4
+    brats_net = BrainTumorSegmentationModel(brats_input_shape, brats_output_channels)
+    brats_net.load_state_dict(torch.load('./brats_weights/best_model.pth'))
 
 net = UNet3D(1, 1, use_bias=True, inplanes=16)
 if resume_model:
@@ -129,7 +138,6 @@ test_loader = DataLoader(MRIDataset_(val_x, val_y), shuffle=True, batch_size=con
 
 
 
-
 optimizer = optim.Adam(net.parameters(),
                        lr=config["learning_rate"],
                        weight_decay=config["weight_decay"])
@@ -146,6 +154,9 @@ if is_cuda:
     bce_crit = bce_crit.cuda()
     dice_crit = dice_crit.cuda()
 
+    if config["tf_enable"]:
+        brats_net = brats_net.cuda()
+
 
 def train(train_loader, epoch):
     net.train(True)
@@ -160,6 +171,15 @@ def train(train_loader, epoch):
             labels = labels.cuda()
         print("xaxaxaxaxa: ", inputs.size())
         print("xexexexexe: ", labels.size())
+        if config["tf_enable"]:
+            in_brats = torch.zeros(config["batch_size"], 4, 160, 160, 90)
+            in_brats = in_brats.cuda()
+            in_brats[:, 0, 16:144, 16:144, 10:81] = inputs[:, 0, :, :, :]
+            in_brats[:, 1, 16:144, 16:144, 10:81] = inputs[:, 0, :, :, :]
+            in_brats[:, 2, 16:144, 16:144, 10:81] = inputs[:, 0, :, :, :]
+            in_brats[:, 3, 16:144, 16:144, 10:81] = inputs[:, 0, :, :, :]
+            out_brats = brats_net(in_brats)
+            out_brats = torch.argmax(out_brats, dim=1)
         outputs = sigmoid(net(inputs))
         print("xixixixixi: ", outputs.size())
         reporter.feed(outputs, labels)
